@@ -9,12 +9,21 @@ const getAuthHeader = () => {
 
 const getAllNews = async (params = {}) => {
   try {
-    const { page = 1, limit = 10, category, status, featured } = params;
-    const response = await axios.get(
-      `${API_URL}?page=${page}&limit=${limit}${category ? `&category=${category}` : ''}${status ? `&status=${status}` : ''}${featured !== undefined ? `&featured=${featured}` : ''}`
-    );
+    const { page = 1, limit = 10, category, status = 'published', featured } = params;
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    });
+
+    if (category) queryParams.append('category', category);
+    if (status) queryParams.append('status', status);
+    if (featured !== undefined) queryParams.append('featured', featured);
+
+    const response = await axios.get(`${API_URL}?${queryParams.toString()}`);
+    console.log('API Response:', response.data); // Để debug
     return response.data;
   } catch (error) {
+    console.error('getAllNews error:', error);
     throw error;
   }
 };
@@ -31,22 +40,28 @@ const getNewsById = async (id) => {
 const addNews = async (newsData) => {
   try {
     const response = await axios.post(API_URL, newsData, {
-      headers: getAuthHeader()
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'multipart/form-data'
+      }
     });
     return response.data;
   } catch (error) {
-    throw error;
+    throw error.response?.data || error;
   }
 };
 
 const updateNews = async (id, newsData) => {
   try {
     const response = await axios.put(`${API_URL}/${id}`, newsData, {
-      headers: getAuthHeader()
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'multipart/form-data'
+      }
     });
     return response.data;
   } catch (error) {
-    throw error;
+    throw error.response?.data || error;
   }
 };
 

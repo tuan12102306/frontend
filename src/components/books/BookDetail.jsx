@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FaBook, FaArrowLeft, FaHeart, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { Document, Page, pdfjs } from 'react-pdf';
 import bookService from '../../services/book.service';
 import borrowService from '../../services/borrow.service';
 import favoriteService from '../../services/favorite.service';
 import ReviewSection from './ReviewSection';
 import './BookDetail.css';
+
+// Cấu hình PDF worker - cách mới
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const BookDetail = () => {
   const [book, setBook] = useState(null);
@@ -19,6 +23,9 @@ const BookDetail = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
   const isAdmin = user?.user?.role === 'admin';
+  const [numPages, setNumPages] = useState(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pdfError, setPdfError] = useState(null);
 
   const fetchBookData = async () => {
     try {
@@ -138,7 +145,7 @@ const BookDetail = () => {
       console.log('Return response:', response); // Debug log
       
       if (response.success) {
-        toast.success('Trả sách thành công');
+        toast.success('Trảả sách thành công');
         setCurrentBorrow(null);
         // Cập nhật lại thông tin sách
         await fetchBookData();
@@ -167,6 +174,16 @@ const BookDetail = () => {
         toast.error(error.message || 'Không thể xóa sách. Vui lòng thử lại!');
       }
     }
+  };
+
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    setNumPages(numPages);
+    setPageNumber(1);
+  };
+
+  const onDocumentLoadError = (error) => {
+    console.error('Error loading PDF:', error);
+    setPdfError(error);
   };
 
   if (loading) {
@@ -311,6 +328,54 @@ const BookDetail = () => {
       <div className="book-reviews">
         <ReviewSection bookId={id} />
       </div>
+
+      {book.preview_pdf && (
+        <div className="book-preview-section">
+          <h2>Xem trước sách</h2>
+          <div className="pdf-viewer">
+            <Document
+              file={`http://localhost:5000${book.preview_pdf}`}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={<div>Đang tải PDF...</div>}
+              options={{
+                cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+                cMapPacked: true,
+                standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/'
+              }}
+            >
+              {numPages && (
+                <Page 
+                  pageNumber={pageNumber} 
+                  width={Math.min(600, window.innerWidth - 32)}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                  loading={<div>Đang tải trang...</div>}
+                />
+              )}
+            </Document>
+            {numPages && (
+              <div className="pdf-navigation">
+                <p>Trang {pageNumber} trên {numPages}</p>
+                <div className="pdf-controls">
+                  <button
+                    disabled={pageNumber <= 1}
+                    onClick={() => setPageNumber(pageNumber - 1)}
+                  >
+                    Trang trước
+                  </button>
+                  <button
+                    disabled={pageNumber >= numPages}
+                    onClick={() => setPageNumber(pageNumber + 1)}
+                  >
+                    Trang sau
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

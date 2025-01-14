@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaPlus, FaNewspaper, FaStar } from 'react-icons/fa';
+import { FaPlus, FaNewspaper, FaStar, FaEye } from 'react-icons/fa';
 import newsService from '../../services/news.service';
 import './News.css';
 
@@ -30,19 +30,32 @@ const NewsList = () => {
   const fetchNews = async () => {
     try {
       setLoading(true);
+      console.log('Fetching news with params:', {
+        page: pagination.page,
+        limit: pagination.limit,
+        ...filters
+      });
+
       const response = await newsService.getAllNews({
         page: pagination.page,
         limit: pagination.limit,
-        ...filters,
-        status: 'published'
+        ...filters
       });
       
+      console.log('API Response:', response); // Debug response
+
       if (response.success) {
-        setNews(response.data);
-        setPagination(response.pagination);
+        setNews(response.data || []);
+        setPagination(prev => ({
+          ...prev,
+          total: response.pagination.total,
+          total_pages: response.pagination.total_pages
+        }));
       }
     } catch (error) {
-      toast.error('Failed to fetch news');
+      console.error('Fetch news error:', error);
+      toast.error('Không thể tải tin tức');
+      setNews([]);
     } finally {
       setLoading(false);
     }
@@ -55,6 +68,11 @@ const NewsList = () => {
       [name]: value
     }));
     setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const truncateText = (text, maxLength) => {
+    if (text.length <= maxLength) return text;
+    return text.substr(0, maxLength) + '...';
   };
 
   if (loading) return <div className="loading">Loading...</div>;
@@ -84,30 +102,41 @@ const NewsList = () => {
       </div>
 
       <div className="news-grid">
-        {news.map((item) => (
-          <div key={item.id} className="news-card">
-            {item.thumbnail && (
+        {news.length > 0 ? (
+          news.map((item) => (
+            <div key={item.id} className="news-card">
               <div className="news-image">
-                <img src={item.thumbnail} alt={item.title} />
+                <img 
+                  src={item.image_url ? `http://localhost:5000${item.image_url}` : '/default-news.png'}
+                  alt={item.title}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/default-news.png';
+                  }}
+                />
                 {item.is_featured && (
                   <span className="featured-badge">
                     <FaStar /> Nổi bật
                   </span>
                 )}
               </div>
-            )}
-            <div className="news-content">
-              <h3>
-                <Link to={`/news/${item.id}`}>{item.title}</Link>
-              </h3>
-              <div className="news-meta">
-                <span>{new Date(item.created_at).toLocaleDateString()}</span>
-                <span>Tác giả: {item.author_name}</span>
-                <span>Lượt xem: {item.view_count}</span>
+              <div className="news-content">
+                <h3>{truncateText(item.title, 60)}</h3>
+                <p className="news-excerpt">{truncateText(item.content, 120)}</p>
+                <div className="news-meta">
+                  <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                  <span>Tác giả: {item.author_name || 'Admin'}</span>
+                  <span><FaEye /> {item.view_count || 0}</span>
+                </div>
+                <Link to={`/news/${item.id}`} className="read-more">
+                  Xem chi tiết
+                </Link>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <div className="no-news">Không có tin tức nào</div>
+        )}
       </div>
 
       {pagination.total_pages > 1 && (

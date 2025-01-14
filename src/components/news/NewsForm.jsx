@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaSave, FaTimes } from 'react-icons/fa';
+import { FaSave, FaTimes, FaUpload } from 'react-icons/fa';
 import newsService from '../../services/news.service';
 import './News.css';
 
@@ -12,11 +12,14 @@ const NewsForm = () => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    thumbnail: '',
     category: 'announcements',
     status: 'draft',
     is_featured: false
   });
+  
+  // Thêm state cho preview ảnh
+  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
 
   useEffect(() => {
     if (id) {
@@ -29,6 +32,9 @@ const NewsForm = () => {
       const response = await newsService.getNewsById(id);
       if (response.success) {
         setFormData(response.data);
+        if (response.data.image_url) {
+          setImagePreview(`http://localhost:5000${response.data.image_url}`);
+        }
       }
     } catch (error) {
       toast.error('Failed to fetch news detail');
@@ -38,20 +44,44 @@ const NewsForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     try {
-      setLoading(true);
-      const response = id
-        ? await newsService.updateNews(id, formData)
-        : await newsService.addNews(formData);
+        if (!formData.title || !formData.content) {
+            toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+            return;
+        }
 
-      if (response.success) {
-        toast.success(`News ${id ? 'updated' : 'created'} successfully`);
-        navigate('/news');
-      }
+        setLoading(true);
+        const newsFormData = new FormData();
+
+        // Thêm các trường dữ liệu vào FormData
+        newsFormData.append('title', formData.title);
+        newsFormData.append('content', formData.content);
+        newsFormData.append('category', formData.category);
+        newsFormData.append('status', formData.status);
+        newsFormData.append('is_featured', formData.is_featured ? '1' : '0');
+
+        // Thêm ảnh nếu có
+        if (selectedImages[0]) {
+            newsFormData.append('news_image', selectedImages[0]);
+        }
+
+        // Gọi API tương ứng
+        const response = id
+            ? await newsService.updateNews(id, newsFormData)
+            : await newsService.addNews(newsFormData);
+
+        if (response.success) {
+            toast.success(`Tin tức đã được ${id ? 'cập nhật' : 'tạo'} thành công`);
+            navigate('/news');
+        } else {
+            throw new Error(response.message || 'Có lỗi xảy ra');
+        }
     } catch (error) {
-      toast.error(error.response?.data?.message || `Failed to ${id ? 'update' : 'create'} news`);
+        console.error('Submit error:', error);
+        toast.error(error.message || 'Không thể lưu tin tức');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -61,6 +91,20 @@ const NewsForm = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedImages(files);
+
+    // Preview ảnh chính
+    if (files[0]) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(files[0]);
+    }
   };
 
   return (
@@ -91,13 +135,25 @@ const NewsForm = () => {
         </div>
 
         <div className="form-group">
-          <label>Ảnh đại diện (URL)</label>
-          <input
-            type="url"
-            name="thumbnail"
-            value={formData.thumbnail}
-            onChange={handleChange}
-          />
+          <label>Ảnh tin tức</label>
+          <div className="image-upload-container">
+            <input
+              type="file"
+              onChange={handleImageChange}
+              accept="image/*"
+              multiple
+              className="image-input"
+              id="news-images"
+            />
+            <label htmlFor="news-images" className="image-upload-label">
+              <FaUpload /> Chọn ảnh
+            </label>
+          </div>
+          {imagePreview && (
+            <div className="image-preview">
+              <img src={imagePreview} alt="Preview" />
+            </div>
+          )}
         </div>
 
         <div className="form-row">
@@ -107,6 +163,7 @@ const NewsForm = () => {
               name="category"
               value={formData.category}
               onChange={handleChange}
+              required
             >
               <option value="announcements">Thông báo</option>
               <option value="events">Sự kiện</option>
@@ -120,6 +177,7 @@ const NewsForm = () => {
               name="status"
               value={formData.status}
               onChange={handleChange}
+              required
             >
               <option value="draft">Bản nháp</option>
               <option value="published">Xuất bản</option>

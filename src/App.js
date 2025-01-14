@@ -33,6 +33,7 @@ import PenaltiesList from './components/penalties/PenaltiesList';
 import UserStats from './components/statistics/UserStats';
 import AdminNotifications from './components/admin/notifications/AdminNotifications';
 import MyContacts from './components/contacts/MyContacts';
+import CategoryBooks from './components/categories/CategoryBooks';
 
 // Layout Component
 const MainLayout = ({ children }) => {
@@ -270,6 +271,14 @@ function App() {
             <PrivateRoute>
               <MyContacts />
             </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/categories/:categoryId/books" 
+          element={
+            <MainLayout>
+              <CategoryBooks />
+            </MainLayout>
           } 
         />
         <Route path="/" element={<Navigate to="/login" />} />

@@ -560,3 +560,79 @@ textarea {
 .delete-book-btn svg {
   font-size: 1.2rem;
 }
+
+.book-preview-section {
+  margin-top: 2rem;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pdf-viewer {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pdf-navigation {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.pdf-controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.pdf-controls button {
+  padding: 8px 16px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.pdf-controls button:hover:not(:disabled) {
+  background: #357abd;
+}
+
+.pdf-controls button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Thêm loading state cho PDF */
+.react-pdf__Document {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.react-pdf__Page {
+  margin: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.react-pdf__Page canvas {
+  max-width: 100%;
+  height: auto !important;
+}
+
+/* Thêm loading styles */
+.react-pdf__message {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.react-pdf__message--error {
+  color: #dc3545;
+}

@@ -17,14 +17,22 @@ const getAllBooks = async () => {
   }
 };
 
-const searchBooks = async (keyword = '', page = 1, limit = 12) => {
+const searchBooks = async (keyword = '') => {
   try {
     const response = await axios.get(`${API_URL}/search`, {
-      params: { keyword, page, limit }
+      params: { keyword }
     });
-    return response.data;
+    // Đảm bảo trả về đúng format dữ liệu
+    return {
+      success: true,
+      data: response.data.data.books || [] // Lấy trực tiếp array books
+    };
   } catch (error) {
-    throw error;
+    console.error('Search error:', error);
+    return {
+      success: false,
+      data: []
+    };
   }
 };
 
@@ -33,11 +41,10 @@ const addBook = async (bookData) => {
   try {
     const formData = new FormData();
     
-    // Thêm các trường thông tin sách vào FormData
     Object.keys(bookData).forEach(key => {
-      if (key === 'image') {
+      if (key === 'image' || key === 'preview_pdf') {
         if (bookData[key]) {
-          formData.append('image', bookData[key]);
+          formData.append(key, bookData[key]);
         }
       } else {
         formData.append(key, bookData[key].toString());
@@ -60,14 +67,12 @@ const updateBook = async (id, bookData) => {
   try {
     const formData = new FormData();
     
-    // Thêm các trường thông tin sách vào FormData
     Object.keys(bookData).forEach(key => {
-      // Bỏ qua các trường undefined/null trừ trường image
-      if (key === 'image') {
+      if (key === 'image' || key === 'preview_pdf') {
         if (bookData[key]) {
-          formData.append('image', bookData[key]);
+          formData.append(key, bookData[key]);
         }
-      } else if (bookData[key] != null) { // Chỉ thêm các giá trị không null
+      } else if (bookData[key] != null) {
         formData.append(key, bookData[key].toString());
       }
     });
@@ -128,6 +133,36 @@ const borrowBook = async (bookId) => {
   }
 };
 
+// Thêm hàm để lấy URL preview PDF
+const getBookPreviewUrl = (bookId) => {
+  return `${API_URL}/${bookId}/preview`;
+};
+
+// Thêm hàm mới để lấy PDF với CORS
+const getBookPreview = async (bookId) => {
+  try {
+    const response = await axios.get(`${API_URL}/${bookId}/preview`, {
+      responseType: 'blob',
+      headers: {
+        'Accept': 'application/pdf'
+      }
+    });
+    return URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getBooksByCategory = async (categoryId) => {
+    try {
+        const response = await axios.get(`${API_URL}/category/${categoryId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching books by category:', error);
+        throw error;
+    }
+};
+
 const bookService = {
   getAllBooks,
   searchBooks,
@@ -135,7 +170,10 @@ const bookService = {
   updateBook,
   deleteBook,
   getBookById,
-  borrowBook
+  borrowBook,
+  getBookPreviewUrl,
+  getBookPreview,
+  getBooksByCategory
 };
 
 export default bookService;
