@@ -1,0 +1,120 @@
+.notification-container {
+  position: relative;
+}
+
+.notification-icon {
+  position: relative;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  min-width: 18px;
+  text-align: center;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 320px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.notification-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.notification-header a {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+  background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+  background-color: #f0f7ff;
+}
+
+.notification-item h4 {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.notification-item p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.notification-time {
+  font-size: 0.8rem;
+  color: #999;
+  display: block;
+  margin-top: 4px;
+}
+
+.no-notifications {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+}
+
+.notification-type-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: white;
+    font-size: 0.8rem;
+    margin-right: 8px;
+}
+
+.notification-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+/* Màu sắc cho các loại thông báo */
+.notification-item.new_book { border-left-color: #28a745; }
+.notification-item.due_soon { border-left-color: #ffc107; }
+.notification-item.overdue { border-left-color: #dc3545; }
+.notification-item.low_stock { border-left-color: #17a2b8; }
+.notification-item.return { 
+    border-left-color: #6f42c1; 
+} 
